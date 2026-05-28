@@ -8,6 +8,6 @@ export async function getProducts() {
     name: product.name,
     description: product.description,
     price: Number(product.price),
-    stock: product.quantity,
+    stock: Number(product.quantity ?? 0),
   }));
 }

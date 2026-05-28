@@ -6,7 +6,7 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  stock: number;
+  stock?: number | string;
   tag?: string;
 }
 
@@ -16,8 +16,14 @@ interface ProductCardProps {
   onSelect: (id: string) => void;
 }
 
-export function ProductCard({ product, selected, onSelect }: ProductCardProps) {
-  const outOfStock = product.stock === 0;
+export function ProductCard({
+  product,
+  selected,
+  onSelect,
+}: ProductCardProps) {
+  const stock = Number(product.stock ?? 0);
+
+  const outOfStock = stock <= 0;
 
   return (
     <button
@@ -30,7 +36,8 @@ export function ProductCard({ product, selected, onSelect }: ProductCardProps) {
         selected
           ? "border-accent bg-accent/5 shadow-md"
           : "border-border bg-card hover:border-accent/50",
-        outOfStock && "opacity-50 cursor-not-allowed hover:border-border"
+        outOfStock &&
+        "opacity-50 cursor-not-allowed hover:border-border",
       )}
     >
       {selected && (
@@ -48,32 +55,34 @@ export function ProductCard({ product, selected, onSelect }: ProductCardProps) {
       <p className="font-semibold text-foreground text-sm leading-snug">
         {product.name}
       </p>
+
       <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
         {product.description}
       </p>
 
       <div className="mt-3 flex items-end justify-between">
         <span className="text-lg font-bold text-foreground">
-          {product.price.toLocaleString("pt-BR", {
+          {Number(product.price).toLocaleString("pt-BR", {
             style: "currency",
             currency: "BRL",
           })}
         </span>
+
         <span
           className={cn(
             "text-xs font-medium",
             outOfStock
               ? "text-destructive"
-              : product.stock <= 3
+              : stock <= 3
                 ? "text-amber-600"
-                : "text-muted-foreground"
+                : "text-muted-foreground",
           )}
         >
           {outOfStock
             ? "Esgotado"
-            : product.stock <= 3
-              ? `Últimas ${product.stock} unid.`
-              : `${product.stock} em estoque`}
+            : stock <= 3
+              ? `Últimas ${stock} unid.`
+              : `${stock} em estoque`}
         </span>
       </div>
     </button>

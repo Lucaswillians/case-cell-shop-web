@@ -1,79 +1,98 @@
-import { useState, type FormEvent } from "react";
-import { ArrowLeft, CreditCard, MapPin, User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+
+import {
+  ArrowLeft,
+  CreditCard,
+  Loader2,
+} from "lucide-react";
+
+import {
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+
 import { OrderSummary } from "@/components/OrderSummary";
 
-interface CheckoutFormState {
-  name: string;
-  address: string;
-  postalCode: string;
-  phone: string;
+import { useOrders } from "@/services/hooks/useOrders";
+
+interface CartItem {
+  productId: string;
+  quantity: number;
 }
 
-const DEFAULT_ORDER = {
-  orderId: "CS-20260526",
-  product: "Capinha Silicone Premium",
-  quantity: 1,
-  unitPrice: 49.9,
-  total: 49.9,
-};
+interface CheckoutData {
+  customerName: string;
+  street: string;
+  city: string;
+  zipCode: string;
+  items: CartItem[];
+}
 
 export function Checkout() {
   const navigate = useNavigate();
-  const [form, setForm] = useState<CheckoutFormState>({
-    name: "",
-    address: "",
-    postalCode: "",
-    phone: "",
-  });
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
-  function handleChange(field: keyof CheckoutFormState, value: string) {
-    setForm((current) => ({
-      ...current,
-      [field]: value,
-    }));
-    if (error) setError(null);
-  }
+  const location = useLocation();
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const checkoutData =
+    location.state as CheckoutData | undefined;
 
-    if (!form.name.trim() || !form.address.trim() || !form.postalCode.trim()) {
-      setError("Preencha nome, endereço e CEP para continuar.");
+  const { createOrder, isCreating } = useOrders();
+
+  const [error, setError] = useState<string | null>(
+    null,
+  );
+
+  const [successOrder, setSuccessOrder] =
+    useState<any>(null);
+
+  async function handleCreateOrder() {
+    if (!checkoutData) {
+      setError("Dados do checkout não encontrados.");
+
       return;
     }
 
-    setSuccess(true);
+    if (!checkoutData.items.length) {
+      setError("Carrinho vazio.");
+
+      return;
+    }
+
+    try {
+      const response = await createOrder({
+        customerName: checkoutData.customerName,
+        street: checkoutData.street,
+        city: checkoutData.city,
+        zipCode: checkoutData.zipCode,
+        items: checkoutData.items,
+      });
+
+      setSuccessOrder(response);
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.message ??
+        "Erro ao finalizar pedido",
+      );
+    }
   }
 
   function handleResetOrder() {
-    setForm({ name: "", address: "", postalCode: "", phone: "" });
+    setSuccessOrder(null);
+
     setError(null);
-    setSuccess(false);
+
+    navigate("/products");
   }
 
-  if (success) {
+  if (successOrder) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-2xl">
           <OrderSummary
-            orderId={DEFAULT_ORDER.orderId}
-            product={DEFAULT_ORDER.product}
-            quantity={DEFAULT_ORDER.quantity}
-            unitPrice={DEFAULT_ORDER.unitPrice}
-            total={DEFAULT_ORDER.total}
+            order={successOrder.order}
+            message={successOrder.message}
             onNewOrder={handleResetOrder}
           />
-          <button
-            type="button"
-            onClick={() => navigate("/products")}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
-          >
-            <ArrowLeft size={16} aria-hidden />
-            Voltar para as capinhas
-          </button>
         </div>
       </div>
     );
@@ -85,78 +104,95 @@ export function Checkout() {
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <div className="flex items-center gap-3 text-foreground">
             <CreditCard size={20} aria-hidden />
+
             <div>
-              <h1 className="text-xl font-bold">Checkout</h1>
+              <h1 className="text-xl font-bold">
+                Checkout
+              </h1>
+
               <p className="text-sm text-muted-foreground">
-                Complete seus dados para finalizar a compra.
+                Revise os dados antes de finalizar a compra.
               </p>
             </div>
           </div>
 
-          <form className="mt-6 space-y-6" onSubmit={handleSubmit} noValidate>
-            <fieldset className="space-y-3">
-              <legend className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <div className="mt-6 space-y-6">
+            <section className="rounded-2xl border border-border bg-background p-5 space-y-4">
+              <h2 className="text-sm font-semibold text-foreground">
                 Dados do cliente
-              </legend>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="space-y-2 text-sm text-foreground">
-                  <span>Nome completo</span>
-                  <div className="rounded-xl border border-border bg-background px-4 py-3">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <User size={14} />
-                      <input
-                        value={form.name}
-                        onChange={(event) => handleChange("name", event.target.value)}
-                        placeholder="Ex: Maria Silva"
-                        className="w-full bg-transparent text-sm text-foreground outline-none"
-                      />
-                    </div>
-                  </div>
-                </label>
-                <label className="space-y-2 text-sm text-foreground">
-                  <span>Telefone</span>
-                  <div className="rounded-xl border border-border bg-background px-4 py-3">
-                    <input
-                      value={form.phone}
-                      onChange={(event) => handleChange("phone", event.target.value)}
-                      placeholder="(00) 00000-0000"
-                      className="w-full bg-transparent text-sm text-foreground outline-none"
-                    />
-                  </div>
-                </label>
-              </div>
-            </fieldset>
+              </h2>
 
-            <fieldset className="space-y-3">
-              <legend className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Endereço de entrega
-              </legend>
-              <div className="space-y-4">
-                <label className="space-y-2 text-sm text-foreground">
-                  <span>Rua, número e complemento</span>
-                  <div className="rounded-xl border border-border bg-background px-4 py-3">
-                    <input
-                      value={form.address}
-                      onChange={(event) => handleChange("address", event.target.value)}
-                      placeholder="Rua das Flores, 123"
-                      className="w-full bg-transparent text-sm text-foreground outline-none"
-                    />
-                  </div>
-                </label>
-                <label className="space-y-2 text-sm text-foreground">
-                  <span>CEP</span>
-                  <div className="rounded-xl border border-border bg-background px-4 py-3 flex items-center gap-2 text-muted-foreground">
-                    <MapPin size={14} />
-                    <input
-                      value={form.postalCode}
-                      onChange={(event) => handleChange("postalCode", event.target.value)}
-                      placeholder="00000-000"
-                      className="w-full bg-transparent text-sm text-foreground outline-none"
-                    />
-                  </div>
-                </label>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground">
+                    Nome:
+                  </span>
+
+                  <p className="font-medium text-foreground">
+                    {checkoutData?.customerName}
+                  </p>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground">
+                    Rua:
+                  </span>
+
+                  <p className="font-medium text-foreground">
+                    {checkoutData?.street}
+                  </p>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground">
+                    Cidade:
+                  </span>
+
+                  <p className="font-medium text-foreground">
+                    {checkoutData?.city}
+                  </p>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground">
+                    CEP:
+                  </span>
+
+                  <p className="font-medium text-foreground">
+                    {checkoutData?.zipCode}
+                  </p>
+                </div>
               </div>
-            </fieldset>
+            </section>
+
+            <section className="rounded-2xl border border-border bg-background p-5">
+              <h2 className="text-sm font-semibold text-foreground mb-4">
+                Produtos
+              </h2>
+
+              <div className="space-y-3">
+                {checkoutData?.items.map((item) => (
+                  <div
+                    key={item.productId}
+                    className="flex items-center justify-between rounded-xl border border-border p-4"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        Produto
+                      </p>
+
+                      <p className="text-xs text-muted-foreground break-all">
+                        {item.productId}
+                      </p>
+                    </div>
+
+                    <span className="text-sm font-bold text-foreground">
+                      x{item.quantity}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
 
             {error && (
               <p className="rounded-xl border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
@@ -165,43 +201,24 @@ export function Checkout() {
             )}
 
             <button
-              type="submit"
-              className="w-full rounded-xl bg-primary px-5 py-4 text-sm font-bold text-primary-foreground transition hover:opacity-90"
+              type="button"
+              onClick={handleCreateOrder}
+              disabled={isCreating}
+              className="w-full rounded-xl bg-primary px-5 py-4 text-sm font-bold text-primary-foreground transition hover:opacity-90 disabled:opacity-70"
             >
-              Confirmar compra
-            </button>
-          </form>
-        </div>
+              <span className="flex items-center justify-center gap-2">
+                {isCreating && (
+                  <Loader2
+                    size={16}
+                    className="animate-spin"
+                  />
+                )}
 
-        <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-          <p className="font-semibold text-foreground mb-3">Resumo do pedido</p>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span>Produto</span>
-              <span>{DEFAULT_ORDER.product}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Quantidade</span>
-              <span>{DEFAULT_ORDER.quantity}x</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span>
-                {DEFAULT_ORDER.unitPrice.toLocaleString("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                })}
+                {isCreating
+                  ? "Processando compra..."
+                  : "Confirmar compra"}
               </span>
-            </div>
-            <div className="border-t border-border pt-3 flex justify-between text-foreground font-semibold">
-              <span>Total</span>
-              <span>
-                {DEFAULT_ORDER.total.toLocaleString("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                })}
-              </span>
-            </div>
+            </button>
           </div>
         </div>
       </div>

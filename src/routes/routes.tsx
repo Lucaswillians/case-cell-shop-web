@@ -4,8 +4,9 @@ import App from "@/App";
 
 import ProductsPage from "@/pages/products";
 import CheckoutPage from "@/pages/checkout";
+import CartPage from "@/pages/cart";
 import HistoryPage from "@/pages/history";
-// import HistoryPage from "@/pages/history";
+import HistoryDetailPage from "@/pages/history/detail";
 
 export default function AppRoutes() {
   return (
@@ -15,7 +16,9 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="/products" replace />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="cart" element={<CartPage />} />
           <Route path="history" element={<HistoryPage />} />
+          <Route path="history/:id" element={<HistoryDetailPage />} />
           <Route path="*" element={<Navigate to="/products" replace />} />
         </Route>
       </Routes>
