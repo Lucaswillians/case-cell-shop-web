@@ -22,7 +22,6 @@ export function ProductCard({
   onSelect,
 }: ProductCardProps) {
   const stock = Number(product.stock ?? 0);
-
   const outOfStock = stock <= 0;
 
   return (
@@ -32,56 +31,38 @@ export function ProductCard({
       disabled={outOfStock}
       aria-pressed={selected}
       className={cn(
-        "relative w-full text-left rounded-xl border-2 p-5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "relative w-full text-left rounded-xl border-2 p-5 transition-all",
         selected
           ? "border-accent bg-accent/5 shadow-md"
           : "border-border bg-card hover:border-accent/50",
-        outOfStock &&
-        "opacity-50 cursor-not-allowed hover:border-border",
+        outOfStock && "opacity-50 cursor-not-allowed",
       )}
     >
       {selected && (
         <span className="absolute top-3 right-3 text-accent">
-          <CheckCircle size={18} aria-hidden />
+          <CheckCircle size={18} />
         </span>
       )}
 
-      {product.tag && (
-        <span className="inline-block mb-2 px-2 py-0.5 rounded-full text-xs font-semibold bg-accent text-accent-foreground">
-          {product.tag}
-        </span>
-      )}
+      <p className="font-semibold text-sm">{product.name}</p>
 
-      <p className="font-semibold text-foreground text-sm leading-snug">
-        {product.name}
-      </p>
-
-      <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+      <p className="mt-1 text-xs text-muted-foreground">
         {product.description}
       </p>
 
-      <div className="mt-3 flex items-end justify-between">
-        <span className="text-lg font-bold text-foreground">
+      <div className="mt-3 flex justify-between">
+        <span className="font-bold">
           {Number(product.price).toLocaleString("pt-BR", {
             style: "currency",
             currency: "BRL",
           })}
         </span>
 
-        <span
-          className={cn(
-            "text-xs font-medium",
-            outOfStock
-              ? "text-destructive"
-              : stock <= 3
-                ? "text-amber-600"
-                : "text-muted-foreground",
-          )}
-        >
+        <span className="text-xs text-muted-foreground">
           {outOfStock
             ? "Esgotado"
             : stock <= 3
-              ? `Últimas ${stock} unid.`
+              ? `Últimas ${stock}`
               : `${stock} em estoque`}
         </span>
       </div>
