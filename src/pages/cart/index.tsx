@@ -31,11 +31,9 @@ interface CartData {
 
 export default function CartPage() {
   const location = useLocation();
-
   const navigate = useNavigate();
-
   const stateCart = location.state as CartData | undefined;
-
+  
   const [customerName, setCustomerName] = useState(
     stateCart?.customerName ?? "",
   );

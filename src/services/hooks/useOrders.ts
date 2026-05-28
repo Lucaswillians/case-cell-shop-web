@@ -12,9 +12,6 @@ import {
 export function useOrders(id?: string) {
   const queryClient = useQueryClient();
 
-  // ----------------------------
-  // GET ALL ORDERS
-  // ----------------------------
   const historyQuery = useQuery<Order[]>({
     queryKey: ["orders"],
     queryFn: getOrders,
@@ -22,9 +19,6 @@ export function useOrders(id?: string) {
     retry: 1,
   });
 
-  // ----------------------------
-  // GET ORDER BY ID
-  // ----------------------------
   const orderQuery = useQuery<Order>({
     queryKey: ["order", id],
     queryFn: () => getOrderById(id!),
@@ -33,9 +27,6 @@ export function useOrders(id?: string) {
     retry: 1,
   });
 
-  // ----------------------------
-  // CREATE ORDER
-  // ----------------------------
   const createMutation = useMutation<Order, Error, CreateOrderDTO>({
     mutationFn: createOrder,
 
@@ -55,9 +46,6 @@ export function useOrders(id?: string) {
     },
   });
 
-  // ----------------------------
-  // CANCEL ORDER
-  // ----------------------------
   type CancelContext = {
     previousOrders?: Order[];
     previousOrder?: Order;
@@ -87,7 +75,6 @@ export function useOrders(id?: string) {
       const previousOrder =
         queryClient.getQueryData<Order>(["order", orderId]);
 
-      // optimistic update
       if (previousOrders) {
         queryClient.setQueryData<Order[]>(
           ["orders"],
@@ -95,7 +82,7 @@ export function useOrders(id?: string) {
             item.id === orderId
               ? {
                 ...item,
-                status: "CANCELED",
+                status: "canceled",
               }
               : item,
           ),
@@ -107,7 +94,7 @@ export function useOrders(id?: string) {
           ["order", orderId],
           {
             ...previousOrder,
-            status: "CANCELED",
+            status: "canceled",
           },
         );
       }
@@ -152,27 +139,21 @@ export function useOrders(id?: string) {
   });
 
   return {
-    // queries
     history: historyQuery.data,
     order: orderQuery.data,
 
-    // loading
     isHistoryLoading: historyQuery.isLoading,
     isOrderLoading: orderQuery.isLoading,
 
-    // errors
     isHistoryError: historyQuery.isError,
     isOrderError: orderQuery.isError,
 
-    // mutations
     createOrder: createMutation.mutateAsync,
     cancelOrder: cancelMutation.mutateAsync,
 
-    // mutation states
     isCreating: createMutation.isPending,
     isCanceling: cancelMutation.isPending,
 
-    // mutation errors
     createError: createMutation.error,
     cancelError: cancelMutation.error,
   };

@@ -6,7 +6,7 @@ import ProductsPage from "@/pages/products";
 import CheckoutPage from "@/pages/checkout";
 import CartPage from "@/pages/cart";
 import HistoryPage from "@/pages/history";
-import HistoryDetailPage from "@/pages/history/detail";
+import HistoryDetailPage from "@/pages/historyDetail";
 
 export default function AppRoutes() {
   return (

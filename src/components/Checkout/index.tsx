@@ -45,6 +45,50 @@ export function Checkout() {
   const [successOrder, setSuccessOrder] =
     useState<any>(null);
 
+  function getErrorMessage(error: unknown) {
+    if (!error) {
+      return "Erro ao finalizar pedido.";
+    }
+
+    if (typeof error === "string") {
+      return error;
+    }
+
+    if (error instanceof Error) {
+      const axiosResponse = (error as any)?.response?.data;
+
+      if (axiosResponse) {
+        return (
+          axiosResponse.message ||
+          axiosResponse.error ||
+          axiosResponse.detail ||
+          JSON.stringify(axiosResponse)
+        );
+      }
+
+      return error.message;
+    }
+
+    if (typeof error === "object") {
+      const data = (error as any)?.response?.data ?? error;
+
+      if (typeof data === "string") {
+        return data;
+      }
+
+      if (typeof data === "object" && data !== null) {
+        return (
+          data.message ||
+          data.error ||
+          data.detail ||
+          JSON.stringify(data)
+        );
+      }
+    }
+
+    return "Erro ao finalizar pedido.";
+  }
+
   async function handleCreateOrder() {
     if (!checkoutData) {
       setError("Dados do checkout não encontrados.");
@@ -68,11 +112,9 @@ export function Checkout() {
       });
 
       setSuccessOrder(response);
-    } catch (err: any) {
-      setError(
-        err?.response?.data?.message ??
-        "Erro ao finalizar pedido",
-      );
+      setError(null);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     }
   }
 
@@ -85,12 +127,15 @@ export function Checkout() {
   }
 
   if (successOrder) {
+    const order = successOrder.order ?? successOrder;
+    const successMessage = successOrder.message;
+
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-2xl">
           <OrderSummary
-            order={successOrder.order}
-            message={successOrder.message}
+            order={order}
+            message={successMessage}
             onNewOrder={handleResetOrder}
           />
         </div>
