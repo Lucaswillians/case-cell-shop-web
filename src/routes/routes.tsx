@@ -4,6 +4,7 @@ import App from "@/App";
 
 import ProductsPage from "@/pages/products";
 import CheckoutPage from "@/pages/checkout";
+import HistoryPage from "@/pages/history";
 // import HistoryPage from "@/pages/history";
 
 export default function AppRoutes() {
@@ -14,7 +15,7 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="/products" replace />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="checkout" element={<CheckoutPage />} />
-          {/* <Route path="history" element={<HistoryPage />} /> */}
+          <Route path="history" element={<HistoryPage />} />
           <Route path="*" element={<Navigate to="/products" replace />} />
         </Route>
       </Routes>
